@@ -1,5 +1,10 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios"
-import { getAccessToken, setAccessToken } from "../utils/tokenStore"
+
+let getToken: () => string | null = () => null
+
+export function setTokenGetter(fn: () => string | null) {
+  getToken = fn
+}
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -32,7 +37,7 @@ const processQueue = (error: any, token: string | null = null) => {
 }
 
 api.interceptors.request.use((config) => {
-  const token = getAccessToken()
+  const token = getToken()
   if (token && config.headers) {
     config.headers["Authorization"] = `Bearer ${token}`
   }
@@ -62,7 +67,6 @@ api.interceptors.response.use(
         const { data } = await refreshClient.post("/auth/refresh")
 
         const newToken = data.accessToken
-        setAccessToken(newToken)
 
         processQueue(null, newToken)
         isRefreshing = false
@@ -75,9 +79,8 @@ api.interceptors.response.use(
       } catch (err) {
         processQueue(err, null)
         isRefreshing = false
-        setAccessToken(null)
 
-        window.location.href = "/login"
+        window.location.assign("/login")
 
         return Promise.reject(err)
       }
