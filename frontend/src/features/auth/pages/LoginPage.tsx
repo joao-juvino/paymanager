@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ShieldCheck, User } from "lucide-react"
 import InputField from "../components/InputField"
 import PasswordField from "../components/PasswordField"
+import { loginRequest } from "../auth.service"
 
 export default function LoginPage() {
   const [form, setForm] = useState({
@@ -15,19 +16,30 @@ export default function LoginPage() {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    console.log(form)
+    try {
+      setLoading(true)
+      setError(null)
 
-    localStorage.setItem("token", "123")
+      await loginRequest(form.email, form.password)
 
-    window.location.href = "/"
+      window.location.href = "/"
+    } catch (err: any) {
+      setError(err.message || "Erro ao fazer login")
+    } finally {
+      setLoading(false)
+    }
   }
+
 
   return (
     <div className="w-lg rounded-xl shadow-sm bg-white">
-      
+
       {/* HEADER */}
       <div className="px-5 pt-10">
         <div className="flex items-center justify-center gap-2 py-5">
@@ -70,11 +82,16 @@ export default function LoginPage() {
             toggle={() => setShowPassword((prev) => !prev)}
           />
 
+          {error && (
+            <p className="text-highlight-red text-sm">{error}</p>
+          )}
+
           <button
             type="submit"
+            disabled={loading}
             className="cursor-pointer bg-highlight-blue py-3 rounded-lg font-medium text-white hover:opacity-90 transition"
           >
-            Log in
+            {loading ? "Logging in..." : "Log in"}
           </button>
         </form>
       </div>
