@@ -2,8 +2,13 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios"
 import { getAccessToken, setAccessToken } from "../utils/tokenStore"
 
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true 
+})
+
+const refreshClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true
 })
 
 let isRefreshing = false
@@ -54,15 +59,8 @@ api.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const res = await fetch("/api/auth/refresh", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" }
-        })
+        const { data } = await refreshClient.post("/auth/refresh")
 
-        if (!res.ok) throw new Error("Refresh failed")
-
-        const data = await res.json()
         const newToken = data.accessToken
         setAccessToken(newToken)
 
@@ -78,6 +76,9 @@ api.interceptors.response.use(
         processQueue(err, null)
         isRefreshing = false
         setAccessToken(null)
+
+        window.location.href = "/login"
+
         return Promise.reject(err)
       }
     }
