@@ -1,23 +1,26 @@
 import { useState } from "react"
 import { ShieldCheck, User } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 import InputField from "../components/InputField"
 import PasswordField from "../components/PasswordField"
-import { loginRequest } from "../auth.service"
+import { useAuth } from "../../../contexts/AuthContext"
 
 export default function LoginPage() {
+  const navigate = useNavigate()
+  const { login } = useAuth()
+
   const [form, setForm] = useState({
     email: "",
     password: "",
   })
 
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   function handleChange(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
   }
-
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -26,9 +29,9 @@ export default function LoginPage() {
       setLoading(true)
       setError(null)
 
-      await loginRequest(form.email, form.password)
+      await login(form.email, form.password)
 
-      window.location.href = "/"
+      navigate("/", { replace: true })
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login")
     } finally {
@@ -36,11 +39,8 @@ export default function LoginPage() {
     }
   }
 
-
   return (
     <div className="w-lg rounded-xl shadow-sm bg-white">
-
-      {/* HEADER */}
       <div className="px-5 pt-10">
         <div className="flex items-center justify-center gap-2 py-5">
           <div className="bg-highlight-blue flex items-center justify-center text-white p-2 rounded-xl">
@@ -60,12 +60,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* FORM */}
-        <form
-          onSubmit={handleSubmit}
-          className="px-10 py-10 flex flex-col gap-5"
-        >
-          {/* USER FIELD */}
+        <form onSubmit={handleSubmit} className="px-10 py-10 flex flex-col gap-5">
           <InputField
             label="Login / CNPJ"
             icon={<User />}
@@ -74,7 +69,6 @@ export default function LoginPage() {
             onChange={(v) => handleChange("email", v)}
           />
 
-          {/* PASSWORD FIELD */}
           <PasswordField
             value={form.password}
             onChange={(v) => handleChange("password", v)}
@@ -82,9 +76,7 @@ export default function LoginPage() {
             toggle={() => setShowPassword((prev) => !prev)}
           />
 
-          {error && (
-            <p className="text-highlight-red text-sm">{error}</p>
-          )}
+          {error && <p className="text-highlight-red text-sm">{error}</p>}
 
           <button
             type="submit"
@@ -98,7 +90,6 @@ export default function LoginPage() {
 
       <hr className="border-gray-200" />
 
-      {/* FOOTER */}
       <div className="px-10 py-10 flex flex-col gap-5 items-center text-custom-secondary">
         <p className="flex items-center gap-2 text-sm">
           <ShieldCheck className="w-4 h-4" />
@@ -106,9 +97,7 @@ export default function LoginPage() {
         </p>
 
         <div className="bg-custom-gray border border-gray-200 rounded-lg p-5 text-center text-xs flex flex-col gap-2">
-          <h4 className="font-bold uppercase">
-            Authorized Access Only
-          </h4>
+          <h4 className="font-bold uppercase">Authorized Access Only</h4>
           <p>
             By logging in, you agree to your Terms of Service and Data Handling Policies for financial transactions.
           </p>
