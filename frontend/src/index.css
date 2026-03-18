@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+@import "tailwindcss";
+
+:root {
+    --bg-primary: #FFFFFF;
+    
+    --bg-custom-gray: #fafafb;
+    --bg-custom-blue: #f0f7ff;
+    --bg-custom-green: #e2fdfd;
+    
+    --text-primary: #000000;
+    --text-secondary: #606776;
+    
+    --highlight-blue: #1f8cf9;
+    --highlight-green: #0df2f2;
+    --highlight-red: #df4a4a;
+}
+
+@theme {
+  /* fonts */
+  --font-sans: "Open Sans", sans-serif;
+  --font-heading: "Montserrat", sans-serif;
+
+  /* colors */
+  --color-primary: var(--bg-primary);
+  --color-custom-gray: var(--bg-custom-gray);
+  --color-custom-blue: var(--bg-custom-blue);
+  --color-custom-green: var(--bg-custom-green);
+
+  --color-custom-primary: var(--text-primary);
+  --color-custom-secondary: var(--text-secondary);
+
+  --color-highlight-blue: var(--highlight-blue);
+  --color-highlight-green: var(--highlight-green);
+  --color-highlight-red: var(--highlight-red);
+}
+
+@layer components {
+  .input-base {
+    @apply h-12 w-full border border-gray-300 px-3 outline-none text-custom-secondary;
+  }
+
+  .input-icon {
+    @apply flex items-center justify-center w-12 h-12 border border-gray-300 border-r-0 text-custom-secondary;
+  }
+}
