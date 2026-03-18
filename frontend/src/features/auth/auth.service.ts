@@ -1,28 +1,29 @@
+import api from "../../services/api"
 import type { LoginResponse } from "../../types/auth"
 import { setAccessToken } from "../../utils/tokenStore"
 
 export async function loginRequest(email: string, password: string) {
-  const res = await fetch("/api/auth/login", {
-    method: "POST",
-    credentials: "include",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password })
-  })
+  try {
+    const { data } = await api.post<LoginResponse>("/auth/login", {
+      email,
+      password
+    })
 
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(text || "Login failed")
+    setAccessToken(data.accessToken)
+
+    return data
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Login failed"
+    )
   }
-
-  const data = (await res.json()) as LoginResponse
-  setAccessToken(data.accessToken)
-  return data
 }
 
 export async function logoutRequest() {
-  await fetch("/api/auth/logout", {
-    method: "POST",
-    credentials: "include"
-  })
-  setAccessToken(null)
+  try {
+    await api.post("/auth/logout")
+    setAccessToken(null)
+  } catch {
+    throw new Error("Logout failed")
+  }
 }
