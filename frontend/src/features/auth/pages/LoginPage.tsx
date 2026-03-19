@@ -5,6 +5,7 @@ import InputField from "../components/InputField"
 import PasswordField from "../components/PasswordField"
 import { login } from "../auth.service"
 import { useAuth } from "../../../contexts/AuthContext"
+import Logo from "../../../common/components/Logo"
 
 export default function LoginPage() {
   const { setUser } = useAuth();
@@ -49,14 +50,7 @@ export default function LoginPage() {
   return (
     <div className="w-lg rounded-xl shadow-sm bg-white">
       <div className="px-5 pt-10">
-        <div className="flex items-center justify-center gap-2 py-5">
-          <div className="bg-highlight-blue flex items-center justify-center text-white p-2 rounded-xl">
-            <ShieldCheck className="w-7 h-7" />
-          </div>
-          <h2 className="text-highlight-blue text-3xl font-bold font-heading">
-            PayManager
-          </h2>
-        </div>
+        <Logo open={true}/>
 
         <div className="flex flex-col items-center gap-1">
           <h1 className="text-2xl font-bold font-heading text-custom-primary">

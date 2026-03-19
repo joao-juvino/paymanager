@@ -14,6 +14,8 @@
     --highlight-blue: #1f8cf9;
     --highlight-green: #0df2f2;
     --highlight-red: #df4a4a;
+
+    --menu-select: #f3f4f6;
 }
 
 @theme {
@@ -33,6 +35,8 @@
   --color-highlight-blue: var(--highlight-blue);
   --color-highlight-green: var(--highlight-green);
   --color-highlight-red: var(--highlight-red);
+  --color-menu-select: var(--menu-select);
+
 }
 
 @layer components {
