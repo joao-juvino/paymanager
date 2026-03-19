@@ -1,72 +1,45 @@
-import React, { createContext, useContext, useEffect, useState } from "react"
-import { loginRequest, logoutRequest } from "../features/auth/auth.service"
+import { createContext, useContext, useState } from "react";
+import type { AuthContextType } from "../types/auth";
+import type { User } from "../types/user";
 
-type AuthContextType = {
-  accessToken: string | null
-  isAuthenticated: boolean
-  login: (email: string, password: string) => Promise<void>
-  logout: () => Promise<void>
-}
+const AuthContext = createContext<AuthContextType | null>(null);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+export function AuthProvider({ children }: any) {
+  const [user, setUserState] = useState<User | null>(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
+  function setUser(user: User | null) {
+    setUserState(user);
 
-  async function refreshSession() {
-    try {
-      const res = await fetch("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include",
-      })
-
-      if (!res.ok) {
-        setAccessToken(null)
-        return
-      }
-
-      const data = await res.json()
-      setAccessToken(data.accessToken)
-    } catch {
-      setAccessToken(null)
-    } finally {
-      setLoading(false)
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
     }
   }
 
-  useEffect(() => {
-    refreshSession()
-  }, [])
-
-  async function login(email: string, password: string) {
-    const data = await loginRequest(email, password)
-    setAccessToken(data.accessToken)
-  }
-
-  async function logout() {
-    await logoutRequest()
-    setAccessToken(null)
+  function logout() {
+    setUser(null);
   }
 
   return (
     <AuthContext.Provider
       value={{
-        accessToken,
-        isAuthenticated: !!accessToken,
-        login,
+        user,
+        isAuthenticated: !!user,
+        setUser,
         logout,
       }}
     >
-      {loading ? null : children}
+      {children}
     </AuthContext.Provider>
-  )
+  );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error("useAuth must be used within AuthProvider")
-  }
-  return ctx
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 }
