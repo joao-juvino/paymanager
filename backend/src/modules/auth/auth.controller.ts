@@ -20,14 +20,46 @@ export class AuthController {
   ) {
     const data = await this.authService.login(dto);
 
+    // Cookie do access token
     res.cookie('access_token', data.accessToken, {
       httpOnly: true,
-      secure: false, 
-      sameSite: 'lax', 
+      secure: false,
+      sameSite: 'lax',
       maxAge: 1000 * 60 * 60 * 24,
-    })
+    });
+
+    // Cookie do refresh token
+    res.cookie('refresh_token', data.refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      maxAge: 1000 * 60 * 60 * 24 * 7, // Ex.: 7 dias
+    });
 
     return data.user;
+  }
+
+  @Post('refresh')
+  async refresh(@Req() req: Express.Request, @Res({ passthrough: true }) res: Express.Response) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    try {
+      const { user, accessToken } = await this.authService.refreshToken(refreshToken);
+
+      res.cookie('access_token', accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24,
+      });
+
+      return user;
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
   }
 
 

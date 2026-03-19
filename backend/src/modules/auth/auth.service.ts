@@ -48,20 +48,24 @@ export class AuthService {
 
     const user = await this.usersService.findByEmail(email);
 
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      throw new UnauthorizedException('Usuário ou senha incorretos');
+    }
 
     const isMatch = await bcrypt.compare(dto.password, user.password);
 
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+    if (!isMatch) {
+      throw new UnauthorizedException('Usuário ou senha incorretos');
+    }
 
     return {
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
       },
-      ...await this.generateTokens(user.id, user.email)
+      ...(await this.generateTokens(user.id, user.email)),
     };
   }
 
@@ -91,9 +95,54 @@ export class AuthService {
     };
   }
 
+  async refreshToken(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    let payload: any;
+    try {
+      payload = this.jwtService.verify(refreshToken, {
+        secret: env.jwtRefreshSecret,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user || !user.hashedRefreshToken) {
+      throw new UnauthorizedException('User not found or no refresh token saved');
+    }
+
+    const isTokenValid = await bcrypt.compare(refreshToken, user.hashedRefreshToken);
+
+    if (!isTokenValid) {
+      throw new UnauthorizedException('Refresh token does not match');
+    }
+
+    const tokens = await this.generateTokens(user.id, user.email);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt,
+      },
+      ...tokens,
+    };
+  }
+
   async validateToken(token: string) {
     const payload = this.jwtService.verify(token);
     const user = await this.usersService.findById(payload.sub);
-    return user;
+    return {
+      id: user?.id,
+      email: user?.email,
+      name: user?.name,
+      createdAt: user?.createdAt,
+    };
+
   }
 }
