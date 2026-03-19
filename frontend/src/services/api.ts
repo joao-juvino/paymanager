@@ -8,7 +8,7 @@ export function setTokenGetter(fn: () => string | null) {
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
-  withCredentials: true 
+  withCredentials: true
 })
 
 const refreshClient = axios.create({
@@ -48,6 +48,10 @@ api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const ignoredPaths = ['/auth/login', '/auth/register', '/auth/refresh']
+    if (ignoredPaths.some(path => originalRequest.url?.includes(path))) {
+      return Promise.reject(error)
+    }
 
     if (
       error.response &&
