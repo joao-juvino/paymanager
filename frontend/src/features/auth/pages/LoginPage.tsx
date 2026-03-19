@@ -3,11 +3,12 @@ import { ShieldCheck, User } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import InputField from "../components/InputField"
 import PasswordField from "../components/PasswordField"
+import { login } from "../auth.service"
 import { useAuth } from "../../../contexts/AuthContext"
 
 export default function LoginPage() {
-  const navigate = useNavigate()
-  const { login } = useAuth()
+  const { setUser } = useAuth();
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     email: "",
@@ -23,19 +24,25 @@ export default function LoginPage() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
+
+    if (loading) return;
+
+    setLoading(true);
+    setError(null);
 
     try {
-      setLoading(true)
-      setError(null)
+      const user = await login({
+        email: form.email,
+        password: form.password,
+      });
 
-      await login(form.email, form.password)
-
-      navigate("/", { replace: true })
+      setUser(user);
+      navigate("/", { replace: true });
     } catch (err: any) {
-      setError(err.message || "Erro ao fazer login")
+      setError(err.message || "Login failed");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 

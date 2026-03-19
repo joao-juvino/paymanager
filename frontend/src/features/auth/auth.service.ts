@@ -1,23 +1,18 @@
-import api from "../../services/api"
-import type { LoginResponse } from "../../types/auth"
+import api from "../../services/api";
+import type { LoginPayload } from "../../types/auth";
+import type { User } from "../../types/user";
 
-export async function loginRequest(email: string, password: string) {
+export async function login(payload: LoginPayload): Promise<User> {
   try {
-    const { data } = await api.post<LoginResponse>("/auth/login", {
-      email,
-      password,
-    })
-
-    return data
+    const { data } = await api.post("/auth/login", payload);
+    return data;
   } catch (error: any) {
-    throw new Error(error.response?.data?.message || "Login failed")
-  }
-}
+    if (error.response) {
+      const message =
+        error.response.data?.message || "Invalid credentials";
+      throw new Error(message);
+    }
 
-export async function logoutRequest() {
-  try {
-    await api.post("/auth/logout")
-  } catch {
-    throw new Error("Logout failed")
+    throw new Error("Network error. Try again.");
   }
 }
