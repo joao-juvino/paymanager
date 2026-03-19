@@ -145,4 +145,12 @@ export class AuthService {
     };
 
   }
+
+  async logout(userId: number | undefined) {
+    if (!userId) {
+      throw new UnauthorizedException('User not found');
+    }
+    
+    await this.usersService.updateRefreshToken(userId, null);
+  }
 }
