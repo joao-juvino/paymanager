@@ -9,7 +9,8 @@ export async function login(payload: LoginPayload): Promise<User> {
   } catch (error: any) {
     if (error.response) {
       const message =
-        error.response.data?.message || "Invalid credentials";
+      error.response.data?.message || "Invalid credentials";
+      console.log(message)
       throw new Error(message);
     }
 

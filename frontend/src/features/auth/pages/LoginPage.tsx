@@ -9,15 +9,15 @@ import { useAuth } from "../../../contexts/AuthContext"
 export default function LoginPage() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
-
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
   const [form, setForm] = useState({
     email: "",
     password: "",
   })
-
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+
 
   function handleChange(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -36,7 +36,7 @@ export default function LoginPage() {
         email: form.email,
         password: form.password,
       });
-
+      
       setUser(user);
       navigate("/", { replace: true });
     } catch (err: any) {
