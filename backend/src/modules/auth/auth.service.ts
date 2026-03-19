@@ -16,7 +16,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto) {
     const email = dto.email.toLowerCase().trim();
@@ -54,7 +54,15 @@ export class AuthService {
 
     if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-    return this.generateTokens(user.id, user.email);
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        createdAt: user.createdAt
+      },
+      ...await this.generateTokens(user.id, user.email)
+    };
   }
 
   private async generateTokens(userId: number, email: string) {
@@ -81,5 +89,11 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  async validateToken(token: string) {
+    const payload = this.jwtService.verify(token);
+    const user = await this.usersService.findById(payload.sub);
+    return user;
   }
 }

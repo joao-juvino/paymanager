@@ -3,7 +3,18 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
+
+  async findById(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
+    });
+  }
 
   findByEmail(email: string) {
     return this.prisma.user.findUnique({
