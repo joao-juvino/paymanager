@@ -79,6 +79,24 @@ export class AuthController {
     }
   }
 
+  @Post('logout')
+  async logout(@Req() req: Express.Request, @Res({ passthrough: true }) res: Express.Response) {
+    const token = req.cookies['access_token'];
+
+    if (token) {
+      try {
+        const user = await this.authService.validateToken(token);
+        await this.authService.logout(user.id);
+      } catch {
+      }
+    }
+
+    res.clearCookie('access_token', { httpOnly: true, secure: false, sameSite: 'lax' });
+    res.clearCookie('refresh_token', { httpOnly: true, secure: false, sameSite: 'lax' });
+
+    return { message: 'Logged out successfully' };
+  }
+
 }
 
 
