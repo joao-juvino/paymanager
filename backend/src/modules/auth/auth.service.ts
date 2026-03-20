@@ -135,22 +135,35 @@ export class AuthService {
   }
 
   async validateToken(token: string) {
-    const payload = this.jwtService.verify(token);
-    const user = await this.usersService.findById(payload.sub);
-    return {
-      id: user?.id,
-      email: user?.email,
-      name: user?.name,
-      createdAt: user?.createdAt,
-    };
+    let payload: any;
 
+    try {
+      payload = this.jwtService.verify(token, {
+        secret: env.jwtAccessSecret,
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const user = await this.usersService.findById(payload.sub);
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      createdAt: user.createdAt,
+    };
   }
 
   async logout(userId: number | undefined) {
     if (!userId) {
       throw new UnauthorizedException('User not found');
     }
-    
+
     await this.usersService.updateRefreshToken(userId, null);
   }
 }
