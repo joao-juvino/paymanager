@@ -6,6 +6,7 @@ import AuthGuard from "./guards/AuthGuard";
 import PublicGuard from "./guards/PublicGuard";
 import RegisterPaymentPage from "../../features/payment/pages/RegisterPaymentPage";
 import { paymentRoutes } from "../../features/payment/routes";
+import { userRoutes } from "../../features/user/routes";
 
 const LoginPage = React.lazy(() => import("../../features/auth/pages/LoginPage"));
 
@@ -24,8 +25,12 @@ export default function AppRoutes() {
         {/* PRIVATE */}
         <Route element={<AuthGuard />}>
           <Route element={<MainLayout />}>
-            {/* <Route path="/payment/register" element={<RegisterPaymentPage />} /> */}
+            {/* PaymentRoutes */}
             {paymentRoutes.map((route) => (
+              <Route key={route.path} path={route.path} element={route.element} />
+            ))}
+            {/* User Routes */}
+            {userRoutes.map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />
             ))}
           </Route>
