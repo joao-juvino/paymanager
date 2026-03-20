@@ -6,6 +6,7 @@ import AuthorizationTableRow from "../components/AuthorizationTableRow";
 import AuthorizationStatistics from "../components/AuthorizationStatistics";
 import DetailedAuthorizationRequest from "../components/DetailedAuthorizationRequest";
 import type { PaymentRequest } from "../../../types/payment";
+import PageHeader from "../../../common/components/PageHeader";
 
 const requests: PaymentRequest[] = [
   {
@@ -54,12 +55,10 @@ export default function AnalysePaymentPage() {
   return (
     <div>
       <div className="px-20 py-10">
-        <header className="mb-10">
-          <h1 className="mb-2 text-3xl font-semibold font-heading">Pending Authorizations</h1>
-          <p className="text-gray-600">
-            Review and approve pending financial transactions. Ensure all details match the contracted services before authorizing disbursements.
-          </p>
-        </header>
+        <PageHeader
+          title="Pending Authorizations"
+          description="Review and approve pending financial transactions. Ensure all details match the contracted services before authorizing disbursements."
+        />
 
         <main className="flex gap-10">
           <div>

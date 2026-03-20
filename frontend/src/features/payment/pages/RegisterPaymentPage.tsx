@@ -6,6 +6,7 @@ import { useAuth } from "../../../contexts/AuthContext";
 import type { PaymentForm } from "../../../types/payment";
 import PaymentChecklist from "../components/PaymentChecklist";
 import PaymentMetadata from "../components/PaymentMetadata";
+import PageHeader from "../../../common/components/PageHeader";
 
 const RegisterPaymentFields: {
   field: keyof PaymentForm;
@@ -65,10 +66,10 @@ export default function RegisterPaymentPage() {
 
   return (
     <div className="px-20 py-10">
-      <header className="mb-10">
-        <h1 className="mb-2 text-3xl font-semibold font-heading">Register new payment</h1>
-        <p className="text-gray-600">Fill in the beneficiary details and transaction amount to initiate the authorization workflow.</p>
-      </header>
+      <PageHeader
+        title="Register new payment"
+        description="Fill in the beneficiary details and transaction amount to initiate the authorization workflow."
+      />
       <div className="flex gap-10">
         <main className="w-5xl shadow-sm rounded-lg">
           <div className="px-10 py-5 border-b-1 border-gray-300 flex gap-3 bg-custom-gray">

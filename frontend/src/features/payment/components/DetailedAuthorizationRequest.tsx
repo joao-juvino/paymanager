@@ -1,6 +1,7 @@
 import { Building2, DollarSign, Calendar, UserIcon, CircleCheck, CircleX } from "lucide-react";
 import DetailedAuthorizationItem from "./DetailedAuthorizationItem";
 import type { PaymentRequest } from "../../../types/payment";
+import { formatCurrency } from "../../../common/utils";
 
 interface Props {
   request: PaymentRequest;
@@ -69,9 +70,3 @@ export default function DetailedAuthorizationRequest({ request }: Props) {
   );
 }
 
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
