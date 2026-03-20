@@ -18,3 +18,15 @@ export type PaymentRequest = {
   requester: string;
   description: string;
 };
+
+export type Status = "Rejected" | "Authorized" | "Pending";
+
+export interface History {
+  id: string;
+  date: string;
+  beneficiary: Company;
+  value: number;
+  requester: string;
+  authorizer: string;
+  status: Status;
+}
