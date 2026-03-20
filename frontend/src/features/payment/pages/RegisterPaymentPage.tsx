@@ -1,5 +1,5 @@
 
-import { Building2, Calendar, CircleAlert, CircleCheck, CirclePlus, Clock, CreditCard, FileText, Hash, MoveRight, User } from "lucide-react";
+import { Building2, CirclePlus, CreditCard, FileText, Hash } from "lucide-react";
 import PaymentFormItem from "../components/PaymentFormItem";
 import { useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
@@ -7,6 +7,9 @@ import type { PaymentForm } from "../../../types/payment";
 import PaymentChecklist from "../components/PaymentChecklist";
 import PaymentMetadata from "../components/PaymentMetadata";
 import PageHeader from "../../../common/components/PageHeader";
+import { createPayment } from "../payment.service";
+import { useAlert } from "../../../contexts/AlertContext";
+import { validatePayment } from "../utils/validatePayment";
 
 const RegisterPaymentFields: {
   field: keyof PaymentForm;
@@ -46,7 +49,9 @@ const RegisterPaymentFields: {
   ];
 
 export default function RegisterPaymentPage() {
+  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   const [form, setForm] = useState<PaymentForm>({
     cnpj: "",
@@ -59,9 +64,38 @@ export default function RegisterPaymentPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log(form);
+
+    if (loading) return;
+
+    const errors = validatePayment(form);
+
+    if (errors.length > 0) {
+      errors.forEach((err) => showAlert(err, "warning"));
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      await createPayment(form);
+
+      showAlert("Pagamento criado com sucesso!", "success");
+
+      setForm({
+        cnpj: "",
+        companyName: "",
+        amount: "",
+        description: "",
+      });
+
+    } catch (err: any) {
+      showAlert(err.message || "Erro ao criar pagamento", "error");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -83,46 +117,48 @@ export default function RegisterPaymentPage() {
               <p className="text-sm font-normal text-gray-600">Mandatory fields are marked with an asterisk.</p>
             </div>
           </div>
-          <div className="px-10 py-7 flex flex-col gap-5">
-            <form name="payment-form" onSubmit={handleSubmit}>
-              <div className="flex flex-wrap justify-between">
-                {RegisterPaymentFields.map(item => (
-                  <PaymentFormItem
-                    key={item.field}
-                    {...item}
-                    value={form[item.field]}
-                    onChange={(v) => handleChange(item.field, v)}
-                  />
-                ))}
-              </div>
-              <div className="flex flex-col gap-3">
-                <div className="flex gap-3">
-                  <div className="text-gray-600">
-                    <FileText />
-                  </div>
-                  <label className="font-normal text-md">Service Description</label>
-                  <span className="text-highlight-red font-semibold">*</span>
+          <div>
+            <form onSubmit={handleSubmit}>
+              <div className="px-10 py-7 flex flex-col gap-5">
+                <div className="flex flex-wrap justify-between">
+                  {RegisterPaymentFields.map(item => (
+                    <PaymentFormItem
+                      key={item.field}
+                      {...item}
+                      value={form[item.field]}
+                      onChange={(v) => handleChange(item.field, v)}
+                    />
+                  ))}
                 </div>
-                <textarea
-                  className="resize-none w-full min-h-28 outline-none border-1 border-gray-200 p-3 rounded-lg"
-                  placeholder="Provide a detailed justification for this payment request..."
-                  value={form.description}
-                  onChange={(e) => handleChange("description", e.target.value)}
-                />
+                <div className="flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <div className="text-gray-600">
+                      <FileText />
+                    </div>
+                    <label className="font-normal text-md">Service Description</label>
+                    <span className="text-highlight-red font-semibold">*</span>
+                  </div>
+                  <textarea
+                    className="resize-none w-full min-h-28 outline-none border-1 border-gray-200 p-3 rounded-lg"
+                    placeholder="Provide a detailed justification for this payment request..."
+                    value={form.description}
+                    onChange={(e) => handleChange("description", e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="bg-custom-gray flex justify-end px-10 py-5 gap-5">
+                <button onClick={() => setForm({
+                  cnpj: "",
+                  companyName: "",
+                  amount: "",
+                  description: "",
+                })}
+                  className="font-semibold text-sm cursor-pointer bg-white px-5 py-3 border-1 border-gray-300 p-3 rounded-lg">
+                  Cancel
+                </button>
+                <button type="submit" className="font-semibold text-sm cursor-pointer bg-highlight-blue text-white px-5 py-3 p-3 rounded-lg">Submit Request</button>
               </div>
             </form>
-          </div>
-          <div className="bg-custom-gray flex justify-end px-10 py-5 gap-5">
-            <button onClick={() => setForm({
-              cnpj: "",
-              companyName: "",
-              amount: "",
-              description: "",
-            })}
-              className="font-semibold text-sm cursor-pointer bg-white px-5 py-3 border-1 border-gray-300 p-3 rounded-lg">
-              Cancel
-            </button>
-            <button type="submit" form="payment-form" className="font-semibold text-sm cursor-pointer bg-highlight-blue text-white px-5 py-3 p-3 rounded-lg">Submit Request</button>
           </div>
         </main>
         <div className="flex flex-col gap-5">
