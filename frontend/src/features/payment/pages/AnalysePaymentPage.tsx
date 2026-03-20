@@ -41,7 +41,7 @@ const requests: PaymentRequest[] = [
     requester: "Michael Scott",
     description: "Cloud infrastructure maintenance for Q3 - AWS and Azure services management.",
   },
-  
+
 ];
 
 export default function AnalysePaymentPage() {
@@ -53,55 +53,53 @@ export default function AnalysePaymentPage() {
   const selectedRequest = requests[0];
 
   return (
-    <div>
-      <div className="px-20 py-10">
-        <PageHeader
-          title="Pending Authorizations"
-          description="Review and approve pending financial transactions. Ensure all details match the contracted services before authorizing disbursements."
-        />
+    <div className="px-20 py-10">
+      <PageHeader
+        title="Pending Authorizations"
+        description="Review and approve pending financial transactions. Ensure all details match the contracted services before authorizing disbursements."
+      />
 
-        <main className="flex gap-10">
-          <div>
-            <div className="w-3xl rounded-lg">
-              <div className="flex justify-between p-5 bg-custom-gray rounded-t-lg border-1 border-gray-200">
-                <div className="flex gap-3">
-                  <CircleAlert className="text-highlight-blue" />
-                  <h4 className="font-semibold">{requests.length} Pending Requests</h4>
-                </div>
-                <span className="font-light italic text-sm text-gray-600">
-                  Authorizer: Jane Smith
-                </span>
+      <main className="flex gap-10">
+        <div>
+          <div className="w-3xl rounded-lg">
+            <div className="flex justify-between p-5 bg-custom-gray rounded-t-lg border-1 border-gray-200">
+              <div className="flex gap-3">
+                <CircleAlert className="text-highlight-blue" />
+                <h4 className="font-semibold">{requests.length} Pending Requests</h4>
               </div>
-
-              <table className="w-full border-1 border-gray-200">
-                <thead className="w-full">
-                  <tr className="text-center">
-                    <th className="py-3">ID</th>
-                    <th className="py-3">Beneficiary</th>
-                    <th className="py-3">Date</th>
-                    <th className="py-3">Value</th>
-                    <th className="py-3"></th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {requests.map((item) => (
-                    <AuthorizationTableRow key={item.id} {...item} />
-                  ))}
-                </tbody>
-              </table>
+              <span className="font-light italic text-sm text-gray-600">
+                Authorizer: Jane Smith
+              </span>
             </div>
 
-            <div className="flex pt-5 gap-5">
-              {statistics.map((item) => (
-                <AuthorizationStatistics key={item.title} {...item} />
-              ))}
-            </div>
+            <table className="w-full border-1 border-gray-200">
+              <thead className="w-full">
+                <tr className="text-center">
+                  <th className="py-3">ID</th>
+                  <th className="py-3">Beneficiary</th>
+                  <th className="py-3">Date</th>
+                  <th className="py-3">Value</th>
+                  <th className="py-3"></th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {requests.map((item) => (
+                  <AuthorizationTableRow key={item.id} {...item} />
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <DetailedAuthorizationRequest request={selectedRequest} />
-        </main>
-      </div>
+          <div className="flex pt-5 gap-5">
+            {statistics.map((item) => (
+              <AuthorizationStatistics key={item.title} {...item} />
+            ))}
+          </div>
+        </div>
+
+        <DetailedAuthorizationRequest request={selectedRequest} />
+      </main>
     </div>
   );
 }
