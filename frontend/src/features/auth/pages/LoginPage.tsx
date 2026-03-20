@@ -39,7 +39,7 @@ export default function LoginPage() {
       });
       
       setUser(user);
-      navigate("/", { replace: true });
+      navigate("/payment/register", { replace: true });
     } catch (err: any) {
       setError(err.message || "Login failed");
     } finally {
