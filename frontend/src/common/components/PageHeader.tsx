@@ -10,7 +10,9 @@ export default function PageHeader({ title, description, action }: {
                 <h1 className="mb-2 text-3xl font-semibold font-heading">{title}</h1>
                 <p className="text-gray-600">{description}</p>
             </div>
-            {action}
+            <span className="pt-3">
+                {action}
+            </span>
         </header>
     );
 }

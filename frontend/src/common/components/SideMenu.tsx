@@ -9,9 +9,8 @@ const menuItems = [
     { link: "/payment/register", icon: <CirclePlus />, text: "Register Payment" },
     { link: "/payment/analyse", icon: <SquareCheckBig />, text: "Authorize Requests" },
     { link: "/payment/history", icon: <History />, text: "Payment History" },
-    { link: "/payment/register", icon: <Users />, text: "User Management" },
+    { link: "/users", icon: <Users />, text: "User Management" },
 ];
-
 
 export default function SideMenu() {
     const navigate = useNavigate();

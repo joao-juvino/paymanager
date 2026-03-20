@@ -6,7 +6,7 @@ interface LogoProps {
 
 export default function Logo({ open }: LogoProps) {
     return (
-        <div className="flex items-center justify-center gap-2 py-5 px-3">
+        <div className="cursor-pointer flex items-center justify-center gap-2 py-5 px-3">
             <div className="bg-highlight-blue flex items-center justify-center text-white p-2 rounded-xl">
                 <ShieldCheck className="w-7 h-7" />
             </div>
