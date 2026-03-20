@@ -2,21 +2,21 @@
 @import "tailwindcss";
 
 :root {
-    --bg-primary: #FFFFFF;
-    
-    --bg-custom-gray: #fafafb;
-    --bg-custom-blue: #f0f7ff;
-    --bg-custom-green: #e2fdfd;
-    --bg-custom-red: #f8e8e8;
-    
-    --text-primary: #000000;
-    --text-secondary: #606776;
-    
-    --highlight-blue: #1f8cf9;
-    --highlight-green: #0df2f2;
-    --highlight-red: #df4a4a;
+  --bg-primary: #FFFFFF;
 
-    --menu-select: #f3f4f6;
+  --bg-custom-gray: #fafafb;
+  --bg-custom-blue: #f0f7ff;
+  --bg-custom-green: #e2fdfd;
+  --bg-custom-red: #f8e8e8;
+
+  --text-primary: #000000;
+  --text-secondary: #606776;
+
+  --highlight-blue: #1f8cf9;
+  --highlight-green: #0df2f2;
+  --highlight-red: #df4a4a;
+
+  --menu-select: #f3f4f6;
 }
 
 @theme {
@@ -29,9 +29,7 @@
   --color-custom-gray: var(--bg-custom-gray);
   --color-custom-blue: var(--bg-custom-blue);
   --color-custom-green: var(--bg-custom-green);
-  --color-custom-red: var(--bg-custom-red)
-
-  --color-custom-primary: var(--text-primary);
+  --color-custom-red: var(--bg-custom-red) --color-custom-primary: var(--text-primary);
   --color-custom-secondary: var(--text-secondary);
 
   --color-highlight-blue: var(--highlight-blue);
@@ -49,4 +47,20 @@
   .input-icon {
     @apply flex items-center justify-center w-12 h-12 border border-gray-300 border-r-0 text-custom-secondary;
   }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease;
 }
