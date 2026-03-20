@@ -1,7 +1,6 @@
 
 import { Building2, Calendar, CircleAlert, CircleCheck, CirclePlus, Clock, CreditCard, FileText, Hash, MoveRight, User } from "lucide-react";
 import PaymentFormItem from "../components/PaymentFormItem";
-import SubmissionMetadataItem from "../components/SubmissionMetadataItem";
 import { useState } from "react";
 import { useAuth } from "../../../contexts/AuthContext";
 import type { PaymentForm } from "../../../types/payment";
