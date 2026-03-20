@@ -13,7 +13,7 @@ export default function MenuItem({ link, icon, text }: MenuItemProps) {
     <li className="flex items-center gap-5 rounded-lg mb-3 hover:bg-menu-select">
       <Link to={link} className="p-3 flex items-center gap-5 w-full">
         {icon}
-        <span className="font-medium text-md">{text}</span>
+        <span className="text-gray-800 font-sm text-md">{text}</span>
       </Link>
     </li>
   );

@@ -6,10 +6,10 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const menuItems = [
-    { link: "registerPayment", icon: <CirclePlus />, text: "Register Payment" },
-    { link: "authorizeRequests", icon: <SquareCheckBig />, text: "Authorize Requests" },
-    { link: "paymentHistory", icon: <History />, text: "Payment History" },
-    { link: "userManagement", icon: <Users />, text: "User Management" },
+    { link: "/payment/register", icon: <CirclePlus />, text: "Register Payment" },
+    { link: "/payment/analyse", icon: <SquareCheckBig />, text: "Authorize Requests" },
+    { link: "/payment/history", icon: <History />, text: "Payment History" },
+    { link: "/payment/register", icon: <Users />, text: "User Management" },
 ];
 
 
