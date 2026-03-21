@@ -1,9 +1,19 @@
 import type { LucideIcon } from "lucide-react";
 
+export type BackendRole = {
+  REGISTRATION: string;
+  AUTHORIZATION: string
+  ADMIN: string;
+}
+
+export type UserRole = "REGISTRATION" | "AUTHORIZATION" | "ADMIN";
+
 export interface User {
   id: number;
   email: string;
-  name: string;
+  name: string | null;
+  role: UserRole;
+  createdAt: string;
 }
 
 export type Options = {
