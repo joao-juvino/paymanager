@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  REGISTRATION
+  AUTHORIZATION
+  ADMIN
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Payment {
+  id             Int          @id @default(autoincrement())
+  cnpj           String
+  companyName    String
+  amount         Float
+  description    String
+  status         PaymentStatus @default(PENDING)
+  userId         Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User         @relation("PaymentRequester", fields: [userId], references: [id])
+  authorizedById  Int?
+  authorizedBy   User?        @relation("PaymentAuthorizer", fields: [authorizedById], references: [id])
+  authorizedAt    DateTime?
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  username          String?   @unique
+  password          String
+  name              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  hashedRefreshToken String?
+  role              Role      @default(REGISTRATION)
+  isActive          Boolean   @default(true)
+  lastActivityAt    DateTime?
+
+  requestedPayments  Payment[] @relation("PaymentRequester")
+  authorizedPayments Payment[] @relation("PaymentAuthorizer")
+}
