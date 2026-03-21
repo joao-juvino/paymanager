@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -7,9 +6,7 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { env } from '../../config/env';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -17,31 +14,6 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
   ) { }
-
-  async register(dto: RegisterDto) {
-    const email = dto.email.toLowerCase().trim();
-
-    try {
-      const hashedPassword = await bcrypt.hash(dto.password, 10);
-
-      const user = await this.usersService.create({
-        email,
-        password: hashedPassword,
-        name: dto.name,
-      });
-
-      return this.generateTokens(user.id, user.email);
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('User already exists');
-      }
-
-      throw error;
-    }
-  }
 
   async login(dto: LoginDto) {
     const email = dto.email.toLowerCase().trim();
