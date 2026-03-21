@@ -1,23 +1,19 @@
-interface InputDateProps {
+interface Props {
   label: string;
   value: string;
   onChange: (value: string) => void;
 }
 
-export default function InputDate({ value, label, onChange }: InputDateProps) {
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    onChange(e.target.value);
-  }
-
+export default function InputDate({ label, value, onChange }: Props) {
   return (
-    <div className="flex flex-col gap-3 w-full">
-      <label className="font-semibold uppercase text-sm text-gray-600">{label}</label>
+    <label className="flex flex-col gap-2">
+      <span className="text-sm font-semibold text-gray-700">{label}</span>
       <input
         type="date"
         value={value}
-        onChange={handleChange}
-        className="cursor-pointer flex text-gray-600 outline-none border-1 border-gray-200 rounded-lg py-3 px-5 w-full"
+        onChange={(e) => onChange(e.target.value)}
+        className="border border-gray-300 rounded-lg px-4 py-2 outline-none focus:border-highlight-blue"
       />
-    </div>
+    </label>
   );
 }
