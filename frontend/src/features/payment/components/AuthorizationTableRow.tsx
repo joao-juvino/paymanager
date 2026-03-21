@@ -36,7 +36,7 @@ export default function AuthorizationTableRow({
 
       <td className="font-semibold text-md py-3 text-highlight-blue">{formatCurrency(amount)}</td>
 
-      <td className="mt-3 px-5 flex justify-center items-center font-normal text-md py-5 gap-2">
+      <td className="mt-3 px-5 flex justify-center items-center font-normal text-md py-4 gap-2">
         <ChevronRight
           onClick={onSelect}
           className="cursor-pointer hover:text-highlight-blue"
