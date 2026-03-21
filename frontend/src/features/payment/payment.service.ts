@@ -1,5 +1,5 @@
 import api from "../../services/api";
-import type { Payment, PaymentForm, PaymentStatus } from "../../types/payment";
+import type { HistoryResponse, Payment, PaymentForm, PaymentStatus } from "../../types/payment";
 
 export async function createPayment(payload: PaymentForm): Promise<Payment> {
   try {
@@ -68,4 +68,27 @@ export async function getAllPayments(): Promise<Payment[]> {
     }
     throw new Error("Network error. Try again.");
   }
+}
+
+export type HistoryQueryParams = {
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+};
+
+export async function getPaymentHistory(params: HistoryQueryParams) {
+  const cleanParams: any = {
+    page: params.page,
+    limit: params.limit,
+  };
+
+  if (params.startDate) cleanParams.startDate = params.startDate;
+  if (params.endDate) cleanParams.endDate = params.endDate;
+
+  const response = await api.get('/payments/history', {
+    params: cleanParams,
+  });
+
+  return response.data;
 }

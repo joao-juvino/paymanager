@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -15,19 +16,17 @@ import { AuthService } from '../auth/auth.service';
 import { PaymentsService } from './payments.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
+import { HistoryQueryDto } from './dto/history-query.dto';
 
 @Controller('payments')
 export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
     private readonly authService: AuthService,
-  ) { }
+  ) {}
 
   @Post()
-  async create(
-    @Body() dto: CreatePaymentDto,
-    @Req() req: Express.Request,
-  ) {
+  async create(@Body() dto: CreatePaymentDto, @Req() req: Express.Request) {
     const user = await this.getUserFromToken(req);
     return this.paymentsService.create(dto, user.id);
   }
@@ -42,7 +41,7 @@ export class PaymentsController {
   async findPendingPayments(@Req() req: Express.Request) {
     const user = await this.getUserFromToken(req);
 
-    if (user.role !== Role.AUTHORIZATION && user.role !== Role.ADMIN){
+    if (user.role !== Role.AUTHORIZATION && user.role !== Role.ADMIN) {
       throw new ForbiddenException('You are not allowed to view pending payments');
     }
 
@@ -61,7 +60,13 @@ export class PaymentsController {
       throw new ForbiddenException('You are not allowed to authorize payments');
     }
 
-    return this.paymentsService.updateStatus(Number(id), dto.status);
+    return this.paymentsService.updateStatus(Number(id), dto.status, user.id);
+  }
+
+  @Get('history')
+  async findHistory(@Query() query: HistoryQueryDto, @Req() req: Express.Request) {
+    const user = await this.getUserFromToken(req);
+    return this.paymentsService.findHistory(user, query);
   }
 
   @Get('all')

@@ -19,30 +19,33 @@ enum PaymentStatus {
   REJECTED
 }
 
-model User {
-  id                 Int      @id @default(autoincrement())
-  email              String   @unique
-  password           String
-  name               String?
-  role               Role     @default(REGISTRATION)
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-  hashedRefreshToken String?
+model Payment {
+  id             Int          @id @default(autoincrement())
+  cnpj           String
+  companyName    String
+  amount         Float
+  description    String
+  status         PaymentStatus @default(PENDING)
+  userId         Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
-  payments Payment[]
+  user           User         @relation("PaymentRequester", fields: [userId], references: [id])
+  authorizedById  Int?
+  authorizedBy   User?        @relation("PaymentAuthorizer", fields: [authorizedById], references: [id])
+  authorizedAt    DateTime?
 }
 
-model Payment {
-  id          Int           @id @default(autoincrement())
-  cnpj        String
-  companyName String
-  amount      Float
-  description String
-  status      PaymentStatus @default(PENDING)
+model User {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  password          String
+  name              String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  hashedRefreshToken String?
+  role              Role      @default(REGISTRATION)
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  requestedPayments  Payment[] @relation("PaymentRequester")
+  authorizedPayments Payment[] @relation("PaymentAuthorizer")
 }

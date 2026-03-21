@@ -1,6 +1,40 @@
 import type { UserRole } from "./user";
+export type PaymentStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-export type PaymentStatus = "PENDING" | "APPROVED" | "REJECTED";
+export interface Beneficiary {
+  name: string;
+  cnpj: string;
+}
+
+export interface History {
+  id: string;
+  date: string;
+  beneficiary: Beneficiary;
+  value: number;
+  requester: string;
+  authorizer: string;
+  status: PaymentStatus;
+}
+
+export interface HistoryMeta {
+  page: number;
+  limit: number;
+  totalRecords: number;
+  totalPages: number;
+}
+
+export interface HistoryStatistics {
+  totalRecords: number;
+  authorizedValues: number;
+  pendingQueue: number;
+  approvalRate: number;
+}
+
+export interface HistoryResponse {
+  items: History[];
+  meta: HistoryMeta;
+  statistics: HistoryStatistics;
+}
 
 export interface Payment {
   id: number;
@@ -47,13 +81,3 @@ export interface PaymentRequest {
 }
 
 export type Status = "Rejected" | "Authorized" | "Pending";
-
-export interface History {
-  id: string;
-  date: string;
-  beneficiary: Company;
-  value: number;
-  requester: string;
-  authorizer: string;
-  status: Status;
-}
