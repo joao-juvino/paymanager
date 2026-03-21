@@ -7,18 +7,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Payment {
-  id          Int      @id @default(autoincrement())
-  cnpj        String
-  companyName String
-  amount      Float
-  description String
+enum Role {
+  REGISTRATION
+  AUTHORIZATION
+  ADMIN
+}
 
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model User {
@@ -26,9 +24,25 @@ model User {
   email              String   @unique
   password           String
   name               String?
+  role               Role     @default(REGISTRATION)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   hashedRefreshToken String?
 
   payments Payment[]
+}
+
+model Payment {
+  id          Int           @id @default(autoincrement())
+  cnpj        String
+  companyName String
+  amount      Float
+  description String
+  status      PaymentStatus @default(PENDING)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

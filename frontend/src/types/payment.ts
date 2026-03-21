@@ -1,3 +1,29 @@
+import type { UserRole } from "./user";
+
+export type PaymentStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface Payment {
+  id: number;
+  cnpj: string;
+  companyName: string;
+  amount: number;
+  description: string;
+  status: PaymentStatus;
+  userId: number;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    id: number;
+    name: string | null;
+    email: string;
+    role: UserRole;
+  };
+}
+
+export type AuthorizePaymentDto = {
+  status: "APPROVED" | "REJECTED";
+};
+
 export type PaymentForm = {
   cnpj: string;
   companyName: string;
@@ -10,14 +36,15 @@ export type Company = {
   cnpj: string;
 };
 
-export type PaymentRequest = {
+export interface PaymentRequest {
   id: string;
   company: Company;
   date: string;
   amount: number;
   requester: string;
   description: string;
-};
+  status: PaymentStatus;
+}
 
 export type Status = "Rejected" | "Authorized" | "Pending";
 

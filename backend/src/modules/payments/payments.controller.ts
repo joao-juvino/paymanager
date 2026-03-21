@@ -1,49 +1,87 @@
 import {
-    Body,
-    Controller,
-    Get,
-    Post,
-    Req,
-    UnauthorizedException,
+  Body,
+  Controller,
+  ForbiddenException,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { PaymentsService } from './payments.service';
-import { CreatePaymentDto } from './dto/create-payment.dto';
+import { Role, PaymentStatus } from '@prisma/client';
 import * as Express from 'express';
 import { AuthService } from '../auth/auth.service';
+import { PaymentsService } from './payments.service';
+import { CreatePaymentDto } from './dto/create-payment.dto';
+import { UpdatePaymentStatusDto } from './dto/update-payment-status.dto';
 
 @Controller('payments')
 export class PaymentsController {
-    constructor(
-        private readonly paymentsService: PaymentsService,
-        private readonly authService: AuthService,
-    ) { }
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly authService: AuthService,
+  ) { }
 
-    @Post()
-    async create(
-        @Body() dto: CreatePaymentDto,
-        @Req() req: Express.Request
-    ) {
-        const token = req.cookies['access_token'];
+  @Post()
+  async create(
+    @Body() dto: CreatePaymentDto,
+    @Req() req: Express.Request,
+  ) {
+    const user = await this.getUserFromToken(req);
+    return this.paymentsService.create(dto, user.id);
+  }
 
-        if (!token) {
-            throw new UnauthorizedException('No token found');
-        }
+  @Get('mine')
+  async findMyPayments(@Req() req: Express.Request) {
+    const user = await this.getUserFromToken(req);
+    return this.paymentsService.findMyPayments(user.id);
+  }
 
-        const user = await this.authService.validateToken(token);
+  @Get('pending')
+  async findPendingPayments(@Req() req: Express.Request) {
+    const user = await this.getUserFromToken(req);
 
-        return this.paymentsService.create(dto, user.id);
+    if (user.role !== Role.AUTHORIZATION && user.role !== Role.ADMIN){
+      throw new ForbiddenException('You are not allowed to view pending payments');
     }
 
-    @Get()
-    async findMyPayments(@Req() req: Express.Request) {
-        const token = req.cookies['access_token'];
+    return this.paymentsService.findPendingPayments();
+  }
 
-        if (!token) {
-            throw new UnauthorizedException('No token found');
-        }
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdatePaymentStatusDto,
+    @Req() req: Express.Request,
+  ) {
+    const user = await this.getUserFromToken(req);
 
-        const user = await this.authService.validateToken(token);
-
-        return this.paymentsService.findAllByUser(user.id);
+    if (user.role !== Role.AUTHORIZATION && user.role !== Role.ADMIN) {
+      throw new ForbiddenException('You are not allowed to authorize payments');
     }
+
+    return this.paymentsService.updateStatus(Number(id), dto.status);
+  }
+
+  @Get('all')
+  async findAllPayments(@Req() req: Express.Request) {
+    const user = await this.getUserFromToken(req);
+
+    if (user.role !== Role.ADMIN) {
+      throw new ForbiddenException('You are not allowed to access this resource');
+    }
+
+    return this.paymentsService.findAllPayments();
+  }
+
+  private async getUserFromToken(req: Express.Request) {
+    const token = req.cookies['access_token'];
+
+    if (!token) {
+      throw new UnauthorizedException('No token found');
+    }
+
+    return this.authService.validateToken(token);
+  }
 }
