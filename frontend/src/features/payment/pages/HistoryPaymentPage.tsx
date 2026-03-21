@@ -1,79 +1,106 @@
 import { Download, Funnel, Search } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import InputDate from "../components/InputDate";
 import HistoryStatistics from "../components/HistoryStatistics";
 import HistoryTableRow from "../components/HistoryTableRow";
-import type { History } from "../../../types/payment";
-import { useState } from "react";
+import type {
+  History,
+  HistoryMeta,
+  HistoryStatistics as HistoryStatisticsType,
+} from "../../../types/payment";
 import useHistoryFilters from "../hooks/useHistoryFilters";
 import PageHeader from "../../../common/components/PageHeader";
-
-const history: History[] = [
-  {
-    id: "PAY-8821",
-    date: "2023-11-20",
-    beneficiary: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    value: 12500,
-    requester: "Michael Scott",
-    authorizer: "Jane Smith",
-    status: "Pending",
-  },
-  {
-    id: "PAY-8822",
-    date: "2023-11-20",
-    beneficiary: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    value: 12500,
-    requester: "Michael Scott",
-    authorizer: "Jane Smith",
-    status: "Rejected",
-  },
-  {
-    id: "PAY-8823",
-    date: "2023-11-20",
-    beneficiary: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    value: 12500,
-    requester: "Michael Scott",
-    authorizer: "Jane Smith",
-    status: "Rejected",
-  },
-  {
-    id: "PAY-8824",
-    date: "2023-11-20",
-    beneficiary: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    value: 12500,
-    requester: "Michael Scott",
-    authorizer: "Jane Smith",
-    status: "Rejected",
-  },
-];
-
-
-const statistics = [
-  { title: "Total records", value: "1,248" },
-  { title: "Authorized Values", value: "$452,190.00" },
-  { title: "Pending queue", value: "12 items" },
-  { title: "Aproval rate", value: "94.2%" },
-];
+import { getPaymentHistory } from "../payment.service";
+import { formatCurrency } from "../../../common/utils";
 
 export default function HistoryPaymentPage() {
-  const { filters, handleFilterChange, isValidDateRange } = useHistoryFilters();
-  const isFilterValid =
-    filters.startDate &&
-    filters.endDate &&
-    isValidDateRange(filters.startDate, filters.endDate);
+  const { filters, handleFilterChange, isValidDateRange, setPage } = useHistoryFilters();
+  const [items, setItems] = useState<History[]>([]);
+  const [meta, setMeta] = useState<HistoryMeta>({
+    page: 1,
+    limit: 4,
+    totalRecords: 0,
+    totalPages: 1,
+  });
+  const [statistics, setStatistics] = useState<HistoryStatisticsType>({
+    totalRecords: 0,
+    authorizedValues: 0,
+    pendingQueue: 0,
+    approvalRate: 0,
+  });
+  const [loading, setLoading] = useState(true);
 
-  const total = 1248;
-  const current = history.length;
+  const isPartialDateRange =
+    Boolean(filters.startDate) !== Boolean(filters.endDate);
+
+  const isFilterValid =
+    !isPartialDateRange && isValidDateRange(filters.startDate, filters.endDate);
+
+  async function loadHistory(query = filters) {
+    setLoading(true);
+
+    try {
+      const data = await getPaymentHistory({
+        ...query,
+        limit: 3,
+      });
+
+      setItems(data.items);
+      setMeta(data.meta);
+      setStatistics(data.statistics);
+    } catch (err) {
+      console.error("Failed to fetch history", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadHistory({ ...filters, page: 1 });
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    try {
-      console.log(filters);
-    } catch (err) {
-      console.error("Failed to fetch history");
-    }
+    if (!isFilterValid) return;
+
+    setPage(1);
+    await loadHistory({ ...filters, page: 1 });
   }
 
+  async function handlePageChange(page: number) {
+    setPage(page);
+    await loadHistory({ ...filters, page });
+  }
+
+  async function handleExportCsv() {
+    const csvRows = await getPaymentHistory({
+      ...filters,
+      page: 1,
+      limit: Math.max(statistics.totalRecords, 1),
+    });
+
+    const csv = buildCsv(csvRows.items);
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "payment-history.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  const statsCards = useMemo(
+    () => [
+      { title: "Total records", value: statistics.totalRecords.toLocaleString("pt-BR") },
+      { title: "Authorized Values", value: formatCurrency(statistics.authorizedValues) },
+      { title: "Pending queue", value: `${statistics.pendingQueue.toLocaleString("pt-BR")} items` },
+      { title: "Approval rate", value: `${statistics.approvalRate.toFixed(1)}%` },
+    ],
+    [statistics],
+  );
 
   return (
     <div className="px-20 pt-8 pb-4">
@@ -81,18 +108,23 @@ export default function HistoryPaymentPage() {
         title="Record Inquiry"
         description="Audit trail and historical data for all payment requests across the organization."
         action={
-          <button className="py-4 flex items-center gap-3 cursor-pointer px-5 border-1 border-gray-300 rounded-lg">
+          <button
+            onClick={handleExportCsv}
+            className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-300 px-5 py-4"
+          >
             <Download />
             <span>Export CSV</span>
           </button>
         }
       />
-      <div className="border-1 border-gray-200 rounded-lg p-8 py-5">
-        <div className="flex gap-3 text-lg font-semibold mb-5">
+
+      <div className="rounded-lg border border-gray-200 p-8 py-5">
+        <div className="mb-5 flex gap-3 text-lg font-semibold">
           <Funnel className="text-highlight-blue" />
           <h4>Search Filters</h4>
         </div>
-        <form onSubmit={handleSubmit} className="flex gap-10 items-end">
+
+        <form onSubmit={handleSubmit} className="flex items-end gap-10">
           <InputDate
             label="Start date"
             value={filters.startDate}
@@ -106,50 +138,125 @@ export default function HistoryPaymentPage() {
           />
 
           <button
-            className={`cursor-pointer flex gap-3 px-10 py-3 rounded-lg text-white font-semibold 
-                ${isFilterValid ? "bg-highlight-blue" : "bg-gray-300 cursor-not-allowed"}`}
+            className={`flex cursor-pointer gap-3 rounded-lg px-10 py-3 font-semibold text-white ${isFilterValid ? "bg-highlight-blue" : "cursor-not-allowed bg-gray-300"
+              }`}
             type="submit"
+            disabled={!isFilterValid}
           >
             <Search />
             <span>Inquire</span>
           </button>
         </form>
       </div>
-      <div className="flex gap-10 my-5">
-        {statistics.map(item => (
+
+      <div className="my-5 flex gap-10">
+        {statsCards.map((item) => (
           <HistoryStatistics key={item.title} {...item} />
         ))}
       </div>
-      <div className="w-full mt-5 border-1 border-gray-200 rounded-lg">
+
+      <div className="mt-5 overflow-hidden rounded-lg border border-gray-200">
         <table className="w-full text-center">
-          <thead className="text-center border-b-1 border-gray-200">
+          <thead className="border-b border-gray-200">
             <tr className="bg-custom-gray">
-              <th className="p-3 font-semibold ">Date</th>
+              <th className="p-3 font-semibold">Date</th>
               <th className="p-3 font-semibold">Beneficiary</th>
               <th className="p-3 font-semibold">Value</th>
               <th className="p-3 font-semibold">Requester</th>
               <th className="p-3 font-semibold">Authorizer</th>
               <th className="p-3 font-semibold">Status</th>
-              <th className="p-3 font-semibold">Actions</th>
             </tr>
           </thead>
+
           <tbody>
-            {history.map(item => (
-              <HistoryTableRow key={item.id} {...item} />
-            ))}
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="p-8 text-gray-500">
+                  Loading history...
+                </td>
+              </tr>
+            ) : items.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="p-8 text-gray-500">
+                  No records found.
+                </td>
+              </tr>
+            ) : (
+              items.map((item) => (
+                <HistoryTableRow
+                  key={item.id}
+                  {...item}
+                />
+              ))
+            )}
           </tbody>
         </table>
-      </div>
-      <div className=" flex justify-between items-center px-10 py-3 bg-custom-gray rounded-b-lg  border-1 border-t-0 border-gray-300">
-        <p className="text-gray-600 text-sm">Showing {current} of {total} total results</p>
-        <div className="flex gap-3">
-          <button className="cursor-pointer border-1 border-gray-200 p-3 py-1 rounded-lg">Previus</button>
-          <button className="border-1 cursor-pointer border-gray-200 p-3 rounded-lg">1</button>
-          <button className="border-1 border-transparent cursor-pointer hover:border-gray-200 p-3 py-1 rounded-lg">2</button>
-          <button className="border-1 border-transparent cursor-pointer hover:border-gray-200 p-3 py-1 rounded-lg">3</button>
-          <button className="cursor-pointer border-1 border-gray-200 p-3 py-1 rounded-lg">Next</button>
+
+        <div className="flex items-center justify-between border-t border-gray-200 bg-custom-gray px-10 py-3">
+          <p className="text-sm text-gray-600">
+            Showing {items.length} of {meta.totalRecords} total results
+          </p>
+
+          <div className="flex items-center gap-3">
+            <button
+              className="cursor-pointer rounded-lg border border-gray-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => handlePageChange(Math.max(1, meta.page - 1))}
+              disabled={meta.page <= 1}
+              type="button"
+            >
+              Previous
+            </button>
+
+            <span className="rounded-lg border border-gray-200 px-3 py-1 font-semibold">
+              {meta.page}
+            </span>
+
+            <button
+              className="cursor-pointer rounded-lg border border-gray-200 px-3 py-1 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => handlePageChange(Math.min(meta.totalPages, meta.page + 1))}
+              disabled={meta.page >= meta.totalPages}
+              type="button"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
+}
+
+function buildCsv(rows: History[]) {
+  const headers = [
+    "ID",
+    "Date",
+    "Beneficiary",
+    "CNPJ",
+    "Value",
+    "Requester",
+    "Authorizer",
+    "Status",
+  ];
+
+  const lines = rows.map((row) =>
+    [
+      row.id,
+      new Date(row.date).toLocaleDateString("pt-BR"),
+      row.beneficiary.name,
+      row.beneficiary.cnpj,
+      row.value.toFixed(2),
+      row.requester,
+      row.authorizer,
+      row.status,
+    ]
+      .map(escapeCsv)
+      .join(","),
+  );
+
+  return [headers.join(","), ...lines].join("\n");
+}
+
+function escapeCsv(value: string) {
+  const safe = String(value).replace(/"/g, '""');
+  return `"${safe}"`;
 }
