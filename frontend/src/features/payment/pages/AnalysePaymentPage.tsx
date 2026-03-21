@@ -1,56 +1,123 @@
-import {
-  CircleAlert,
-  CircleCheck,
-} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CircleAlert, CircleCheck } from "lucide-react";
 import AuthorizationTableRow from "../components/AuthorizationTableRow";
 import AuthorizationStatistics from "../components/AuthorizationStatistics";
 import DetailedAuthorizationRequest from "../components/DetailedAuthorizationRequest";
-import type { PaymentRequest } from "../../../types/payment";
+import type { Payment, PaymentRequest } from "../../../types/payment";
 import PageHeader from "../../../common/components/PageHeader";
+import { getPendingPayments, updatePaymentStatus } from "../payment.service";
+import { useAlert } from "../../../contexts/AlertContext";
 
-const requests: PaymentRequest[] = [
-  {
-    id: "PAY-8821",
-    company: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    date: "2023-11-20",
-    amount: 12500,
-    requester: "Michael Scott",
-    description: "Cloud infrastructure maintenance for Q3 - AWS and Azure services management.",
-  },
-  {
-    id: "PAY-8822",
-    company: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    date: "2023-11-20",
-    amount: 12500,
-    requester: "Michael Scott",
-    description: "Cloud infrastructure maintenance for Q3 - AWS and Azure services management.",
-  },
-  {
-    id: "PAY-8823",
-    company: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    date: "2023-11-20",
-    amount: 12500,
-    requester: "Michael Scott",
-    description: "Cloud infrastructure maintenance for Q3 - AWS and Azure services management.",
-  },
-  {
-    id: "PAY-8824",
-    company: { name: "TechSolutions LTDA", cnpj: "12.345.678/0001-90" },
-    date: "2023-11-20",
-    amount: 12500,
-    requester: "Michael Scott",
-    description: "Cloud infrastructure maintenance for Q3 - AWS and Azure services management.",
-  },
-
-];
+function mapPaymentToRequest(payment: Payment): PaymentRequest {
+  return {
+    id: `PAY-${String(payment.id).padStart(4, "0")}`,
+    company: {
+      name: payment.companyName,
+      cnpj: payment.cnpj,
+    },
+    date: new Date(payment.createdAt).toLocaleDateString("pt-BR"),
+    amount: payment.amount,
+    requester: payment.user?.name ?? payment.user?.email ?? "Unknown",
+    description: payment.description,
+    status: payment.status,
+  };
+}
 
 export default function AnalysePaymentPage() {
-  const statistics = [
-    { title: "Daily Quota", value: "R$ 450.000,00", icon: <CircleCheck />, theme: "blue" as const },
-    { title: "Priority Items", value: "2 High Risk", icon: <CircleAlert />, theme: "green" as const },
-  ];
+  const [requests, setRequests] = useState<PaymentRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showAlert } = useAlert();
 
-  const selectedRequest = requests[0];
+  async function loadPendingPayments() {
+    try {
+      setLoading(true);
+      const data = await getPendingPayments();
+      setRequests(
+        data.map(mapPaymentToRequest)
+      );
+    } catch (err: any) {
+      showAlert(
+        err.message || "Failed to load pending payments",
+        "error"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadPendingPayments();
+  }, []);
+
+  const statistics = useMemo(() => {
+    const total = requests.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+
+    return [
+      {
+        title: "Pending Requests",
+        value: String(requests.length),
+        icon: <CircleAlert />,
+        theme: "blue" as const
+      },
+      {
+        title: "Total Pending",
+        value: `R$ ${total.toLocaleString("pt-BR", {
+          minimumFractionDigits: 2
+        })}`,
+        icon: <CircleCheck />,
+        theme: "green" as const
+      },
+    ];
+  }, [requests]);
+
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const selectedRequest = requests.find(r => r.id === selectedRequestId) ?? null;
+
+  async function handleAuthorize(
+    paymentIdText: string,
+    status: "APPROVED" | "REJECTED"
+  ) {
+    const paymentId = Number(
+      paymentIdText.replace("PAY-", "")
+    );
+
+    try {
+      await updatePaymentStatus(paymentId, status);
+
+      setRequests((prev) =>
+        prev.filter((item) => item.id !== paymentIdText)
+      );
+
+      showAlert(
+        status === "APPROVED"
+          ? "Payment approved successfully"
+          : "Payment rejected successfully",
+        "success"
+      );
+    } catch (err: any) {
+      showAlert(
+        err.message || "Could not update payment",
+        "error"
+      );
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="px-20 py-10">
+        <PageHeader
+          title="Pending Authorizations"
+          description="Review and approve pending financial transactions."
+        />
+        <div className="mt-8 text-gray-500">
+          Loading pending payments...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-20 py-10">
@@ -65,10 +132,12 @@ export default function AnalysePaymentPage() {
             <div className="flex justify-between p-5 bg-custom-gray rounded-t-lg border-1 border-gray-200">
               <div className="flex gap-3">
                 <CircleAlert className="text-highlight-blue" />
-                <h4 className="font-semibold">{requests.length} Pending Requests</h4>
+                <h4 className="font-semibold">
+                  {requests.length} Pending Requests
+                </h4>
               </div>
               <span className="font-light italic text-sm text-gray-600">
-                Authorizer: Jane Smith
+                Authorizer: {selectedRequest ? selectedRequest.requester : "-"}
               </span>
             </div>
 
@@ -85,7 +154,13 @@ export default function AnalysePaymentPage() {
 
               <tbody>
                 {requests.map((item) => (
-                  <AuthorizationTableRow key={item.id} {...item} />
+                  <AuthorizationTableRow
+                    key={item.id}
+                    {...item}
+                    onApprove={() => handleAuthorize(item.id, "APPROVED")}
+                    onReject={() => handleAuthorize(item.id, "REJECTED")}
+                    onSelect={() => setSelectedRequestId(item.id)}
+                  />
                 ))}
               </tbody>
             </table>
@@ -93,12 +168,25 @@ export default function AnalysePaymentPage() {
 
           <div className="flex pt-5 gap-5">
             {statistics.map((item) => (
-              <AuthorizationStatistics key={item.title} {...item} />
+              <AuthorizationStatistics
+                key={item.title}
+                {...item}
+              />
             ))}
           </div>
         </div>
 
-        <DetailedAuthorizationRequest request={selectedRequest} />
+        {selectedRequest ? (
+          <DetailedAuthorizationRequest
+            request={selectedRequest}
+            onApprove={() => handleAuthorize(selectedRequest.id, "APPROVED")}
+            onReject={() => handleAuthorize(selectedRequest.id, "REJECTED")}
+          />
+        ) : (
+          <div className="w-full p-8 rounded-lg border border-gray-200 text-gray-500">
+            Select one request to view in details.
+          </div>
+        )}
       </main>
     </div>
   );

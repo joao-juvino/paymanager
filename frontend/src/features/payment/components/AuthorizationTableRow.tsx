@@ -1,15 +1,17 @@
 import { ChevronRight } from "lucide-react";
-
-type Company = {
-    name: string,
-    cnpj: string,
-}
+import type { Company, PaymentStatus } from "../../../types/payment";
+import { formatCurrency, formatDate } from "../../../common/utils";
 
 interface AuthorizationTableRowProps {
     id: string;
     company: Company;
     date: string;
     amount: number;
+    requester: string;
+    status: PaymentStatus;
+    onApprove: () => Promise<void>;
+    onReject: () => Promise<void>;
+    onSelect?: () => void;
 }
 
 export default function AuthorizationTableRow({
@@ -17,6 +19,9 @@ export default function AuthorizationTableRow({
   company: { name, cnpj },
   date,
   amount,
+  onApprove,
+  onReject,
+  onSelect,
 }: AuthorizationTableRowProps) {
   return (
     <tr className="text-center hover:bg-custom-gray">
@@ -27,28 +32,16 @@ export default function AuthorizationTableRow({
         <p className="text-gray-600 font-light">{cnpj}</p>
       </td>
 
-      <td className="text-gray-600 font-normal text-md py-3">
-        {formatDate(date)}
-      </td>
+      <td className="text-gray-600 font-normal text-md py-3">{formatDate(date)}</td>
 
-      <td className="font-semibold text-md py-3 text-highlight-blue">
-        {formatCurrency(amount)}
-      </td>
+      <td className="font-semibold text-md py-3 text-highlight-blue">{formatCurrency(amount)}</td>
 
-      <td className="font-normal text-md py-3">
-        <ChevronRight className="cursor-pointer hover:text-highlight-blue" />
+      <td className="mt-3 px-5 flex justify-center items-center font-normal text-md py-5 gap-2">
+        <ChevronRight
+          onClick={onSelect}
+          className="cursor-pointer hover:text-highlight-blue"
+        />
       </td>
     </tr>
   );
-}
-
-function formatCurrency(value: number) {
-  return value.toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-}
-
-function formatDate(date: string) {
-  return new Date(date).toLocaleDateString("pt-BR");
 }
