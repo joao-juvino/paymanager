@@ -1,9 +1,11 @@
-import React from "react"
-const ManageUsersPage = React.lazy(() => import("./pages/ManageUsersPage"))
+import React from "react";
+
+const ManageUsersPage = React.lazy(() => import("./pages/ManageUsersPage"));
 
 export const userRoutes = [
   {
     path: "/users",
-    element: <ManageUsersPage />
-  }
-]
+    element: <ManageUsersPage />,
+    allowedRoles: ["ADMIN"],
+  },
+];
