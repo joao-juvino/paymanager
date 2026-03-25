@@ -104,56 +104,14 @@ cd paymentflow
 
 ---
 
-## 2 - Configurar banco de dados
+## 2 - Executar projeto
 
-Criar banco:
+Obtenda o .env com o nosso time de desenvolvimento e execute o seguinte comando:
 
-```
-CREATE DATABASE paymentflow;
-```
-
-Executar o script inicial:
-
-```
-database/init.sql
+```bash
+docker compose up -d --build
 ```
 
-Este script cria:
-
-* tabelas do sistema
-* usuário administrador inicial
-
----
-
-## 3 - Rodar Backend
-
-```
-cd backend
-pnpm install
-pnpm run start:dev
-```
-
-Backend rodará em:
-
-```
-http://localhost:3000
-```
-
----
-
-## 4 - Rodar Frontend
-
-```
-cd frontend
-pnpm install
-pnpm dev
-```
-
-Frontend rodará em:
-
-```
-http://localhost:5173
-```
 
 ---
 
