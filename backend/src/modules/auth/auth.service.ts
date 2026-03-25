@@ -18,13 +18,17 @@ export class AuthService {
   async login(dto: LoginDto) {
     const email = dto.email.toLowerCase().trim();
 
+    console.log('DTO:', dto)
     const user = await this.usersService.findByEmail(email);
 
+    console.log('USER:', user)
+    
     if (!user) {
       throw new UnauthorizedException('Usuário ou senha incorretos');
     }
-
+    
     const isMatch = await bcrypt.compare(dto.password, user.password);
+    console.log('PASSWORD MATCH:', isMatch)
 
     if (!isMatch) {
       throw new UnauthorizedException('Usuário ou senha incorretos');
